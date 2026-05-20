@@ -1,0 +1,35 @@
+20.5.26
+- The test instructions are pseudo
+- CPU class was set up and the fetch + update pipelined register functions yielded correct results. Tests:
+	* Ins: 0xBC, 0x1C0, 0x6
+	* Ex: 0, 0xBC, 0x1C0, 0x6
+	* Actual: 0, 0xBC, 0x1C0, 0x6 !
+- Decoding has been tested.
+	* Ins: 0xBC, 0x1C0, 0x6
+	* Ex: 0, 0, 0xBC, 0x1C0, 0x6
+	* Actual: 0, 0, 0xBC, 0x1C0, 0x6 !
+- Insutrctions must be managed from the read logical section of the IF_ID register and results should be placed in the write sections of the ID_EX register. 
+  Previous instruction is the focus, generate signals and swap them at the end of the cycle. So, in the next iteration execution of the previous instruction can begin.
+  
+  e.g. ADD, SUB
+	CC2: 
+		- Place ADD in writePip[ID_EX].ins
+		- Generate signals for 0 (providing ADD is the first 'proper' instruction)
+		- 0 will not cause register or memory reading and writing.
+	CC3:
+		- Place SUB in writePip[ID_EX].ins
+		- Generate signals for ADD (this is a non immediate instruction, and register signals must be generated)
+		- Signals will provide gateways to operand supplying
+	CC4:
+		- ADD generated alu signals, so, compuatiion of the supplied operands can begin
+		- Place SUB in writePip[ID_EX].ins
+		- Generate signals for SUB
+		- Signals will provide gateways to operand supplying
+	...
+- Signal Generation
+	* Ins: 0xA00
+	* Ex: 0:0, 0:0, 0x400:1, 0x400:1, 0:0
+	* Ac: 0:0, 0:0, 0x400:1, 0x400:1, 0:0
+	
+		
+
