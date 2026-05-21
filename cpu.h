@@ -22,13 +22,17 @@ class CPU {
 			bool regWrite = false;
 			bool memRead = false;
 			bool memWrite = false;
+			bool immSel = false;
 		};
 	
 		struct PipelinedRegisters {
 			ControlSignals cs;
 			uint16_t ins;
-			uint16_t dest;
-			int16_t opA, opB;
+			uint16_t memDest;
+			int16_t opA, opB, result;
+			uint8_t regDest;
+			uint8_t op;
+			int8_t imm;
 		};
 
 	
@@ -38,20 +42,32 @@ class CPU {
 		void cycle();
 		void fetch();
 		void decode();
+		void execute();
+		void dma();
+		void writeBack();
 		void updatePipelineRegisters();
 		void restoreControlSignalDefaults(ControlSignals*);
+		void updateSignals(ControlSignals*, bool, bool, bool, bool, bool, bool);
+	
+	private:
+		void nop();
+		void hlt();
+		void mov();
+		void lda();
 	
 	private:
 		bool run = true;
 		uint16_t pc = 0;
 		uint16_t flag = 0;
-		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs {};
-		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> readPip {};
-		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> writePip {};
+		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { };
+		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> readPip { };
+		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> writePip { };
 		std::array<uint16_t, MEMORY_SIZE> insMem {
-			0xA00, 0xA00
+			
 		};
-		std::array<int16_t, MEMORY_SIZE> dataMem {};
+		std::array<int16_t, MEMORY_SIZE> dataMem {
+			
+		};
 };
 
 #endif

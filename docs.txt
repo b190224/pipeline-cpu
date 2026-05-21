@@ -31,5 +31,24 @@
 	* Ex: 0:0, 0:0, 0x400:1, 0x400:1, 0:0
 	* Ac: 0:0, 0:0, 0x400:1, 0x400:1, 0:0
 	
+21.5.26
+- Execution is happening at the right time, in today's case the pc's value was 2 and greater.
+- Although the results and instructions seem to be delayed, they're matching up perfectly. 
+	
+	e.g. M, M
+	 execute():
+		- The earlier instruction was a movement (reg -> reg) one, execute the corresponding function.
+		- The mov() function will set result to the operand supplied by decode.
+	...
+	printStatment:
+		- The operand A will remain constant because no instruction exists that can overwrite it, however, the rest of the array is zero inititalised, so instruction zero will prevail
 		
+	ALU RESULT: 0  INS: 0
+	ALU RESULT: 0  INS: 0
+	ALU RESULT: 0  INS: 2568
+	ALU RESULT: -45  INS: 0
+	ALU RESULT: -45  INS: 0
+	ALU RESULT: -45  INS: 0
 
+- I decided to pivot from direct to index addressing as a focus point, as index addressing allows for a greater range. LDA is now index based (not direct). 
+  The combination of the base and offset produce the right result so a value (6656) could be extracted
