@@ -35,7 +35,6 @@ class CPU {
 			int8_t imm;
 		};
 
-	
 	public:
 		CPU() = default;	
 		
@@ -52,8 +51,10 @@ class CPU {
 	private:
 		void nop();
 		void hlt();
+		
 		void mov();
 		void lda();
+		void sta();
 	
 	private:
 		bool run = true;
@@ -63,10 +64,10 @@ class CPU {
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> readPip { };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> writePip { };
 		std::array<uint16_t, MEMORY_SIZE> insMem {
-			
+			0xC48, 0x0, 0x0, 0x0, 0xA08
 		};
 		std::array<int16_t, MEMORY_SIZE> dataMem {
-			
+			549
 		};
 };
 

@@ -4,10 +4,12 @@
 	* Ins: 0xBC, 0x1C0, 0x6
 	* Ex: 0, 0xBC, 0x1C0, 0x6
 	* Actual: 0, 0xBC, 0x1C0, 0x6 !
+	
 - Decoding has been tested.
 	* Ins: 0xBC, 0x1C0, 0x6
 	* Ex: 0, 0, 0xBC, 0x1C0, 0x6
 	* Actual: 0, 0, 0xBC, 0x1C0, 0x6 !
+	
 - Insutrctions must be managed from the read logical section of the IF_ID register and results should be placed in the write sections of the ID_EX register. 
   Previous instruction is the focus, generate signals and swap them at the end of the cycle. So, in the next iteration execution of the previous instruction can begin.
   
@@ -51,4 +53,16 @@
 	ALU RESULT: -45  INS: 0
 
 - I decided to pivot from direct to index addressing as a focus point, as index addressing allows for a greater range. LDA is now index based (not direct). 
-  The combination of the base and offset produce the right result so a value (6656) could be extracted
+  The combination of the base and offset produce the right result so a value (6656) could be extracted.
+  
+22.6.26
+- The skeleton of the pipeline is done and data seems to be moving correctly. 
+	
+	e.g. LDA (r1, [r1+0]), MOV (r0, r1)
+	
+	- Outside the cycle function's while loop, I pasted this code:
+	std::cout << int(regs[0]);
+	
+	- ... The value 549 was printed to the screen. 549 initally lived inside of data memory
+	
+ 

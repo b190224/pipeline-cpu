@@ -84,6 +84,18 @@ void CPU::decode() {
 			break;
 		}
 		
+		case 0x26: {
+				updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				false, // reg write
+				true, // pc write (normal)
+				true, // mem Write
+				false, // mem read
+				true // immsel
+			);
+			break;
+		}
+		
 		default: {
 			break;
 		}
@@ -107,6 +119,11 @@ void CPU::execute() {
 	writePip[EX_MEM].cs = readPip[ID_EX].cs;
 	
 	switch (readPip[ID_EX].op) {
+		case 0x0: {
+			nop();
+			break;
+		}
+		
 		case 0x5: {
 			mov();
 			break;
@@ -125,11 +142,11 @@ void CPU::execute() {
 
 void CPU::dma() {
 	writePip[MEM_WB].cs = readPip[EX_MEM].cs;
+	writePip[MEM_WB].result = readPip[EX_MEM].result;
 	
 	if (readPip[EX_MEM].cs.memRead) {
 		writePip[MEM_WB].result = dataMem[readPip[EX_MEM].memDest];
 		writePip[MEM_WB].regDest = readPip[EX_MEM].regDest;
-		std::cout << writePip[MEM_WB].result;
 	}
 	
 	if (readPip[EX_MEM].cs.memWrite) {
@@ -143,6 +160,10 @@ void CPU::writeBack() {
 	}
 }
 
+void CPU::nop() {
+	return;
+}
+
 void CPU::mov() {
 	writePip[EX_MEM].result = readPip[ID_EX].opA;
 }
@@ -150,3 +171,5 @@ void CPU::mov() {
 void CPU::lda() {
 	writePip[EX_MEM].memDest = readPip[ID_EX].opA + readPip[ID_EX].imm;
 }
+
+
