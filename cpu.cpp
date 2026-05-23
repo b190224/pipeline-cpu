@@ -12,6 +12,9 @@ void CPU::cycle() {
 		fetch();
 		updatePipelineRegisters();
 	}
+	
+	std::cout << int(regs[0]);
+	
 }
 
 void CPU::restoreControlSignalDefaults(ControlSignals* cs) {
@@ -84,6 +87,7 @@ void CPU::decode() {
 			break;
 		}
 		
+		// sta
 		case 0x26: {
 				updateSignals(&writePip[ID_EX].cs, 
 				true, // reg read
@@ -96,27 +100,136 @@ void CPU::decode() {
 			break;
 		}
 		
+		// add
+		case 0x9: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				false // immsel
+			);
+			break;
+		}
+		
+		// sub
+		case 0x29: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				false // immsel
+			);
+			break;
+		}
+		
+		// and
+		case 0x49: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				false // immsel
+			);
+			break;
+		}
+		
+		// or
+		case 0x69: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				false // immsel
+			);
+			break;
+		}
+		
+		// add + imm
+		case 0xB: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				true // immsel
+			);
+			break;
+		}
+		
+		// sub + imm
+		case 0x2B: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				true // immsel
+			);
+			break;
+		}
+		
+		// and + imm
+		case 0x4B: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				true // immsel
+			);
+			break;
+		}
+		
+		// or + imm
+		case 0x6B: {
+			updateSignals(&writePip[ID_EX].cs, 
+				true, // reg read
+				true, // reg write
+				true, // pc write (normal)
+				false, // mem Write
+				false, // mem read
+				true // immsel
+			);
+			break;
+		}
+		
 		default: {
 			break;
 		}
 	}
 	
 	if (writePip[ID_EX].cs.regRead) {
-		writePip[ID_EX].opA = regs[(readPip[ID_EX].ins & 0x38) >> 3];
-		writePip[ID_EX].opB = regs[readPip[ID_EX].ins & 0x7];
+		writePip[ID_EX].opA = regs[(readPip[IF_ID].ins & 0x1C0) >> 6];
+		writePip[ID_EX].opB = regs[(readPip[IF_ID].ins & 0x38) >> 3];
+		writePip[ID_EX].opC = regs[readPip[IF_ID].ins & 0x7];
+		writePip[ID_EX].regSrcB = (readPip[IF_ID].ins & 0x38) >> 3;
+		writePip[ID_EX].regSrcC = readPip[IF_ID].ins & 0x7;
 	}
 	
 	if (writePip[ID_EX].cs.regWrite) {
-		writePip[ID_EX].regDest = (readPip[ID_EX].ins & 0x1C0) >> 6;
+		writePip[ID_EX].regDest = (readPip[IF_ID].ins & 0x1C0) >> 6;
 	}
 	
 	if (writePip[ID_EX].cs.immSel) {
-		writePip[ID_EX].imm = readPip[ID_EX].ins & 0x7;
+		writePip[ID_EX].imm = readPip[IF_ID].ins & 0x7;
 	}
 }
 
 void CPU::execute() {
 	writePip[EX_MEM].cs = readPip[ID_EX].cs;
+	writePip[EX_MEM].regSrcB = readPip[ID_EX].regSrcB;
+	writePip[EX_MEM].regSrcC = readPip[ID_EX].regSrcC;
 	
 	switch (readPip[ID_EX].op) {
 		case 0x0: {
@@ -131,6 +244,51 @@ void CPU::execute() {
 		
 		case 0x6: {
 			lda();
+			break;
+		}
+		
+		case 0x26: {
+			sta();
+			break;
+		}
+		
+		case 0x9: {
+			add();
+			break;
+		}
+		
+		case 0x29: {
+			sub();
+			break;
+		}
+		
+		case 0x49: {
+			andd();
+			break;
+		}
+		
+		case 0x69: {
+			orr();
+			break;
+		}
+		
+		case 0xB: {
+			adi();
+			break;
+		}
+		
+		case 0x2B: {
+			sui();
+			break;
+		}
+		
+		case 0x4B: {
+			ani();
+			break;
+		}
+		
+		case 0x6B: {
+			ori();
 			break;
 		}
 		
@@ -156,7 +314,7 @@ void CPU::dma() {
 
 void CPU::writeBack() {
 	if (readPip[MEM_WB].cs.regWrite) {
-		regs[writePip[MEM_WB].regDest] = writePip[MEM_WB].result;
+		regs[writePip[MEM_WB].regDest] = writePip[EX_MEM].result;
 	}
 }
 
@@ -165,11 +323,58 @@ void CPU::nop() {
 }
 
 void CPU::mov() {
-	writePip[EX_MEM].result = readPip[ID_EX].opA;
+	writePip[EX_MEM].result = readPip[ID_EX].opB;
 }
 
 void CPU::lda() {
-	writePip[EX_MEM].memDest = readPip[ID_EX].opA + readPip[ID_EX].imm;
+	writePip[EX_MEM].memDest = readPip[ID_EX].opB + readPip[ID_EX].imm;
 }
 
+void CPU::sta() {
+	writePip[EX_MEM].result = readPip[ID_EX].opA;
+}
 
+void CPU::add() {
+	int opB = readPip[ID_EX].opB;
+	int opC = readPip[ID_EX].opC;
+	
+	
+	
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = opB + opC;
+}
+	
+void CPU::sub() {	
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = readPip[ID_EX].opB - readPip[ID_EX].opC;
+}
+
+void CPU::andd() {
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = readPip[ID_EX].opB & readPip[ID_EX].opC;
+}
+
+void CPU::orr() {
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = readPip[ID_EX].opB | readPip[ID_EX].opC;
+}
+
+void CPU::adi() {
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = readPip[ID_EX].opB + readPip[ID_EX].imm;
+}
+
+void CPU::sui() {
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = readPip[ID_EX].opB - readPip[ID_EX].imm;
+}
+
+void CPU::ani() {
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = readPip[ID_EX].opB & readPip[ID_EX].imm;
+}
+
+void CPU::ori() {
+	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
+	writePip[EX_MEM].result = readPip[ID_EX].opB | readPip[ID_EX].imm;
+}

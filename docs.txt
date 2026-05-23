@@ -65,4 +65,6 @@
 	
 	- ... The value 549 was printed to the screen. 549 initally lived inside of data memory
 	
- 
+23.5.26
+- STA works correctly.
+- ADD, SUB, AND, OR, ADD (IMM), SUB (IMM), OR (IMM), and AND (imm) work correctly.

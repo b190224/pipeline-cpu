@@ -29,8 +29,8 @@ class CPU {
 			ControlSignals cs;
 			uint16_t ins;
 			uint16_t memDest;
-			int16_t opA, opB, result;
-			uint8_t regDest;
+			int16_t opA, opB, opC, result;
+			uint8_t regDest, regSrcB, regSrcC;
 			uint8_t op;
 			int8_t imm;
 		};
@@ -55,19 +55,28 @@ class CPU {
 		void mov();
 		void lda();
 		void sta();
+		
+		void add();
+		void sub();
+		void andd();
+		void orr();
+		void adi();
+		void sui();
+		void ani();
+		void ori();
 	
 	private:
 		bool run = true;
 		uint16_t pc = 0;
 		uint16_t flag = 0;
-		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { };
+		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { 10 };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> readPip { };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> writePip { };
 		std::array<uint16_t, MEMORY_SIZE> insMem {
-			0xC48, 0x0, 0x0, 0x0, 0xA08
+			0x5603
 		};
 		std::array<int16_t, MEMORY_SIZE> dataMem {
-			549
+			
 		};
 };
 
