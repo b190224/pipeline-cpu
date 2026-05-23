@@ -13,8 +13,7 @@ void CPU::cycle() {
 		updatePipelineRegisters();
 	}
 	
-	std::cout << int(regs[0]);
-	
+	std::cout << int(regs[1]);
 }
 
 void CPU::restoreControlSignalDefaults(ControlSignals* cs) {
@@ -301,6 +300,7 @@ void CPU::execute() {
 void CPU::dma() {
 	writePip[MEM_WB].cs = readPip[EX_MEM].cs;
 	writePip[MEM_WB].result = readPip[EX_MEM].result;
+	writePip[MEM_WB].regDest = readPip[EX_MEM].regDest;
 	
 	if (readPip[EX_MEM].cs.memRead) {
 		writePip[MEM_WB].result = dataMem[readPip[EX_MEM].memDest];
@@ -314,7 +314,7 @@ void CPU::dma() {
 
 void CPU::writeBack() {
 	if (readPip[MEM_WB].cs.regWrite) {
-		regs[writePip[MEM_WB].regDest] = writePip[EX_MEM].result;
+		regs[readPip[MEM_WB].regDest] = readPip[MEM_WB].result;
 	}
 }
 
@@ -335,46 +335,146 @@ void CPU::sta() {
 }
 
 void CPU::add() {
-	int opB = readPip[ID_EX].opB;
-	int opC = readPip[ID_EX].opC;
+	int16_t opB = readPip[ID_EX].opB;
+	int16_t opC = readPip[ID_EX].opC;
 	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opC = readPip[EX_MEM].result;
+	}
 	
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opC = readPip[MEM_WB].result;
+	}
 	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
 	writePip[EX_MEM].result = opB + opC;
 }
 	
 void CPU::sub() {	
+	int16_t opB = readPip[ID_EX].opB;
+	int16_t opC = readPip[ID_EX].opC;
+	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opC = readPip[EX_MEM].result;
+	}
+	
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opC = readPip[MEM_WB].result;
+	}
+	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
-	writePip[EX_MEM].result = readPip[ID_EX].opB - readPip[ID_EX].opC;
+	writePip[EX_MEM].result = opB - opC;
 }
 
 void CPU::andd() {
+	int16_t opB = readPip[ID_EX].opB;
+	int16_t opC = readPip[ID_EX].opC;
+	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opC = readPip[EX_MEM].result;
+	}
+	
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opC = readPip[MEM_WB].result;
+	}
+	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
-	writePip[EX_MEM].result = readPip[ID_EX].opB & readPip[ID_EX].opC;
+	writePip[EX_MEM].result = opB & opC;
 }
 
 void CPU::orr() {
+	int16_t opB = readPip[ID_EX].opB;
+	int16_t opC = readPip[ID_EX].opC;
+	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opC = readPip[EX_MEM].result;
+	}
+	
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opC = readPip[MEM_WB].result;
+	}
+	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
-	writePip[EX_MEM].result = readPip[ID_EX].opB | readPip[ID_EX].opC;
+	writePip[EX_MEM].result = opB | opC;
 }
 
 void CPU::adi() {
+	int16_t opB = readPip[ID_EX].opB;
+	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+	}
+	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
-	writePip[EX_MEM].result = readPip[ID_EX].opB + readPip[ID_EX].imm;
+	writePip[EX_MEM].result = opB + readPip[ID_EX].imm;
 }
 
 void CPU::sui() {
+	int16_t opB = readPip[ID_EX].opB;
+	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest)  && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+		
+	}
+	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
-	writePip[EX_MEM].result = readPip[ID_EX].opB - readPip[ID_EX].imm;
+	writePip[EX_MEM].result = opB - readPip[ID_EX].imm;
 }
 
 void CPU::ani() {
+	int16_t opB = readPip[ID_EX].opB;
+	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+	}
+	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
-	writePip[EX_MEM].result = readPip[ID_EX].opB & readPip[ID_EX].imm;
+	writePip[EX_MEM].result = opB & readPip[ID_EX].imm;
 }
 
 void CPU::ori() {
+	int16_t opB = readPip[ID_EX].opB;
+	
+	if ((readPip[ID_EX].regSrcB == readPip[EX_MEM].regDest) && readPip[ID_EX].cs.regWrite) {
+		opB = readPip[EX_MEM].result;
+	}
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.memRead) {
+		opB = readPip[MEM_WB].result;
+	}
+	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
-	writePip[EX_MEM].result = readPip[ID_EX].opB | readPip[ID_EX].imm;
+	writePip[EX_MEM].result = opB | readPip[ID_EX].imm;
 }

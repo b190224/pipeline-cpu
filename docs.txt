@@ -67,4 +67,14 @@
 	
 23.5.26
 - STA works correctly.
-- ADD, SUB, AND, OR, ADD (IMM), SUB (IMM), OR (IMM), and AND (imm) work correctly.
+- ADD, SUB, AND, OR, ADD (IMM), SUB (IMM), OR (IMM), and AND (imm) work correctly
+- Data hazards are handled correctly using forwarding means. 
+
+	e.g. ADI r0, r1, 3 | SUI r1, r0, 1
+	
+	There's a dependancy bewteen ADI and SUI, because the destination of r0 is equal to the source(s) of r1. Unfortanetly, the new value of r0 is avaiable in a clock
+	cycle that is later than the execution of SUI. The result of forwarding produces 9 in r1, providing that r0 is initially equal to 0 and r1 7,
+	
+	The next logical step is load data hazard handling.
+	
+	
