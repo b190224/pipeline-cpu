@@ -32,7 +32,7 @@ class CPU {
 			int16_t opA, opB, opC, result;
 			uint8_t regDest, regSrcB, regSrcC;
 			uint8_t op;
-			int8_t imm;
+			uint8_t imm;
 		};
 
 	public:
@@ -69,14 +69,14 @@ class CPU {
 		bool run = true;
 		uint16_t pc = 0;
 		uint16_t flag = 0;
-		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { 0,7};
+		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { 50 };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> readPip { };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> writePip { };
 		std::array<uint16_t, MEMORY_SIZE> insMem {
-		0x160B,0x5641
+			0x1605, 0x1605, 0x1605, 0x1605, 0x1605, 0x1605, 0x1605
 		};
 		std::array<int16_t, MEMORY_SIZE> dataMem {
-			10
+			
 		};
 };
 
