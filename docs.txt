@@ -53,7 +53,7 @@
 	ALU RESULT: -45  INS: 0
 
 - I decided to pivot from direct to index addressing as a focus point, as index addressing allows for a greater range. LDA is now index based (not direct). 
-  The combination of the base and offset produce the right result so a value (6656) could be extracted.
+  The combination of the base and offset produce the right result so a value at a high address could be extracted.
   
 22.6.26
 - The skeleton of the pipeline is done and data seems to be moving correctly. 
@@ -77,4 +77,9 @@
 	
 	The next logical step is load data hazard handling.
 	
+24.5.26
+- We would know in the reg destination and signals for a LDA instructions but it's impossible to forward the data. A stall bit should prevent executing, decoding and fetching 
+  until the required data is retrieved?
+
 	
+  

@@ -67,13 +67,14 @@ class CPU {
 	
 	private:
 		bool run = true;
+		bool stall = false;
 		uint16_t pc = 0;
 		uint16_t flag = 0;
-		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { 50 };
+		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { 10 };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> readPip { };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> writePip { };
 		std::array<uint16_t, MEMORY_SIZE> insMem {
-			0x1605, 0x1605, 0x1605, 0x1605, 0x1605, 0x1605, 0x1605
+			
 		};
 		std::array<int16_t, MEMORY_SIZE> dataMem {
 			
