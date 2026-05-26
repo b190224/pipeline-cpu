@@ -5,6 +5,8 @@ void CPU::cycle() {
 	while (run) {
 		if (pc>6)break;
 		
+		// dont forget: resume pipeline here 
+		
 		writeBack();
 		dma();
 		execute();
@@ -14,7 +16,7 @@ void CPU::cycle() {
 		stall = detectLoadDataHazard();
 		
 		if (stall) {
-			FLAG_STALL(flag, true);
+			updateFlagRegister(false, true);
 		}
 		
 		updatePipelineRegisters();
@@ -64,8 +66,9 @@ void CPU::resumePipeline() {
 	
 }
 
-void CPU::updateFlagRegister(bool resume) {
+void CPU::updateFlagRegister(bool resume, bool stall) {
 	FLAG_RESUME(flag, resume);
+	FLAG_STALL(flag, stall);
 }
 
 void CPU::fetch() {

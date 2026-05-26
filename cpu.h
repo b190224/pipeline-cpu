@@ -55,7 +55,7 @@ class CPU {
 		void updateSignals(ControlSignals*, bool, bool, bool, bool, bool, bool);
 		bool detectLoadDataHazard();
 		void resumePipeline();
-		void updateFlagRegister(bool);
+		void updateFlagRegister(bool, bool);
 	
 	private:
 		void nop();

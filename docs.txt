@@ -85,6 +85,7 @@
 - Load data hazard handling was confusing me, after watching a video, I was able to stiumlate the hazard detection unit and come up qith these results:
 	0, 0, 1, 0... which are correct.
 	
-- Handle flags
+- Handle flags, make ex_mem.write = 0,  ensure pipeline progresses in cc5 (review notes)
+- LDA will set resume = 1, so if stall = resume = 1, the pipeline can continue
 	
   
