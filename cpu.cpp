@@ -3,19 +3,22 @@
 
 void CPU::cycle() {
 	while (run) {
-		if (pc>15)break;
-
-		
+		if (pc>6)break;
 		
 		writeBack();
 		dma();
 		execute();
 		decode();				
 		fetch();
+		
+		stall = detectLoadDataHazard();
+		
+		if (stall) {
+			FLAG_STALL(flag, true);
+		}
+		
 		updatePipelineRegisters();
 	}
-	
-		//std::cout << int(regs[0]);
 }
 
 void CPU::restoreControlSignalDefaults(ControlSignals* cs) {
@@ -41,18 +44,40 @@ void CPU::updateSignals(ControlSignals* cs, bool regRead, bool regWrite, bool pc
 }
 
 void CPU::updatePipelineRegisters() {
-	readPip[IF_ID] = writePip[IF_ID];
-	readPip[ID_EX] = writePip[ID_EX];
+	if (!stall) {
+		readPip[IF_ID] = writePip[IF_ID];
+		readPip[ID_EX] = writePip[ID_EX];
+	}
+	else {
+		readPip[ID_EX].op = 0;
+	}
+
 	readPip[EX_MEM] = writePip[EX_MEM];	
 	readPip[MEM_WB] = writePip[MEM_WB];
 }
 
+bool CPU::detectLoadDataHazard() {
+	return ((readPip[ID_EX].op == LDA) && ((readPip[ID_EX].regDest == writePip[ID_EX].regSrcB) || (readPip[ID_EX].regDest == writePip[ID_EX].regSrcC)));
+}
+
+void CPU::resumePipeline() {
+	
+}
+
+void CPU::updateFlagRegister(bool resume) {
+	FLAG_RESUME(flag, resume);
+}
+
 void CPU::fetch() {
+	if (stall) return;
+	
 	writePip[IF_ID].ins = insMem[pc];
 	if (readPip[IF_ID].cs.pcWrite) ++pc;
 }
 
-void CPU::decode() {
+void CPU::decode() {	
+	if (stall) return;
+	
 	writePip[ID_EX].ins = readPip[IF_ID].ins;
 	writePip[ID_EX].op = (readPip[IF_ID].ins & 0xFE00) >> 9;
 	
@@ -76,7 +101,7 @@ void CPU::decode() {
 		}
 		
 		// lda
-		case 0x6: {					
+		case 0x6: {		
 			updateSignals(&writePip[ID_EX].cs, 
 				true, // reg read
 				true, // reg write
@@ -85,6 +110,7 @@ void CPU::decode() {
 				true, // mem read
 				true // immsel
 			);
+			
 			break;
 		}
 		
@@ -228,7 +254,6 @@ void CPU::decode() {
 }
 
 void CPU::execute() {
-	stall = false;
 	writePip[EX_MEM].cs = readPip[ID_EX].cs;
 	writePip[EX_MEM].regSrcB = readPip[ID_EX].regSrcB;
 	writePip[EX_MEM].regSrcC = readPip[ID_EX].regSrcC;
@@ -347,7 +372,13 @@ void CPU::add() {
 	if ((readPip[ID_EX].regSrcC == readPip[EX_MEM].regDest) && readPip[EX_MEM].cs.regWrite) {
 		opC = readPip[EX_MEM].result;
 	}
-
+	
+	if ((readPip[ID_EX].regSrcB == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.regWrite) {
+		opB = readPip[MEM_WB].result;
+	}
+	if ((readPip[ID_EX].regSrcC == readPip[MEM_WB].regDest) && readPip[MEM_WB].cs.regWrite) {
+		opC = readPip[MEM_WB].result;
+	}
 	
 	writePip[EX_MEM].regDest = readPip[ID_EX].regDest;
 	writePip[EX_MEM].result = opB + opC;

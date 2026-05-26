@@ -14,6 +14,12 @@
 #define EX_MEM 2
 #define MEM_WB 3
 
+// special cases
+#define LDA 0x6
+
+#define FLAG_RESUME(flag, bit) ((flag) |= ((bit) << 15))
+#define FLAG_STALL(flag, bit) ((flag) |= ((bit) << 15))
+
 class CPU {
 	private:
 		struct ControlSignals {
@@ -31,7 +37,7 @@ class CPU {
 			uint16_t memDest;
 			int16_t opA, opB, opC, result;
 			uint8_t regDest, regSrcB, regSrcC;
-			uint8_t op;
+			uint8_t op, copyOP;
 			uint8_t imm;
 		};
 
@@ -47,6 +53,9 @@ class CPU {
 		void updatePipelineRegisters();
 		void restoreControlSignalDefaults(ControlSignals*);
 		void updateSignals(ControlSignals*, bool, bool, bool, bool, bool, bool);
+		bool detectLoadDataHazard();
+		void resumePipeline();
+		void updateFlagRegister(bool);
 	
 	private:
 		void nop();
@@ -69,12 +78,12 @@ class CPU {
 		bool run = true;
 		bool stall = false;
 		uint16_t pc = 0;
-		uint16_t flag = 0;
-		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs { 10 };
+		uint16_t flag = 0; // resume stalling after hazard handling, interrupt, carry, parirty, zero, overflow
+		std::array<int16_t, NUM_OF_NONPIPELINED_REGISTERS> regs {  };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> readPip { };
 		std::array<PipelinedRegisters, NUM_OF_PIPEPLINED_REGISTERS> writePip { };
 		std::array<uint16_t, MEMORY_SIZE> insMem {
-			
+			0xC00, 0x1200
 		};
 		std::array<int16_t, MEMORY_SIZE> dataMem {
 			
