@@ -17,8 +17,8 @@
 // special cases
 #define LDA 0x6
 
-#define FLAG_RESUME(flag, bit) ((flag) |= ((bit) << 15))
-#define FLAG_STALL(flag, bit) ((flag) |= ((bit) << 15))
+#define STALL_BIT_POS 15
+#define RESUME_BIT_POS 14
 
 class CPU {
 	private:
@@ -56,6 +56,8 @@ class CPU {
 		bool detectLoadDataHazard();
 		void resumePipeline();
 		void updateFlagRegister(bool, bool);
+		bool retrieveBit(int);
+		void setFlag(bool, int);
 	
 	private:
 		void nop();

@@ -1,24 +1,20 @@
 #include <iostream>
+#include <cmath>
 #include "cpu.h"
 
 void CPU::cycle() {
 	while (run) {
 		if (pc>6)break;
 		
-		// dont forget: resume pipeline here 
+		std::cout << '\n';
 		
 		writeBack();
 		dma();
 		execute();
 		decode();				
-		fetch();
-		
-		stall = detectLoadDataHazard();
-		
-		if (stall) {
-			updateFlagRegister(false, true);
-		}
-		
+		fetch();					
+		resumePipeline();
+		updateFlagRegister(detectLoadDataHazard(), retrieveBit(RESUME_BIT_POS));
 		updatePipelineRegisters();
 	}
 }
@@ -46,13 +42,18 @@ void CPU::updateSignals(ControlSignals* cs, bool regRead, bool regWrite, bool pc
 }
 
 void CPU::updatePipelineRegisters() {
-	if (!stall) {
+	if (!retrieveBit(STALL_BIT_POS)) {
 		readPip[IF_ID] = writePip[IF_ID];
+	}
+	
+	if (!retrieveBit(STALL_BIT_POS)) {
 		readPip[ID_EX] = writePip[ID_EX];
 	}
 	else {
 		readPip[ID_EX].op = 0;
+		restoreControlSignalDefaults(&readPip[ID_EX].cs);
 	}
+	
 
 	readPip[EX_MEM] = writePip[EX_MEM];	
 	readPip[MEM_WB] = writePip[MEM_WB];
@@ -63,24 +64,31 @@ bool CPU::detectLoadDataHazard() {
 }
 
 void CPU::resumePipeline() {
-	
+	if (retrieveBit(STALL_BIT_POS) && retrieveBit(RESUME_BIT_POS)) {		
+		setFlag(false, STALL_BIT_POS);
+	}
 }
 
-void CPU::updateFlagRegister(bool resume, bool stall) {
-	FLAG_RESUME(flag, resume);
-	FLAG_STALL(flag, stall);
+void CPU::updateFlagRegister(bool stall, bool resume) {
+	flag = (stall << STALL_BIT_POS) | (resume << RESUME_BIT_POS);
+}
+
+bool CPU::retrieveBit(int pos) {
+	return ((flag & uint16_t(std::pow(2, pos))) >> pos);
+}
+
+void CPU::setFlag(bool f, int pos) {
+	flag |= (f << pos);
 }
 
 void CPU::fetch() {
-	if (stall) return;
+	if (retrieveBit(STALL_BIT_POS)) return;
 	
 	writePip[IF_ID].ins = insMem[pc];
 	if (readPip[IF_ID].cs.pcWrite) ++pc;
 }
 
-void CPU::decode() {	
-	if (stall) return;
-	
+void CPU::decode() {		
 	writePip[ID_EX].ins = readPip[IF_ID].ins;
 	writePip[ID_EX].op = (readPip[IF_ID].ins & 0xFE00) >> 9;
 	
@@ -336,6 +344,9 @@ void CPU::dma() {
 	if (readPip[EX_MEM].cs.memRead) {
 		writePip[MEM_WB].result = dataMem[readPip[EX_MEM].memDest];
 		writePip[MEM_WB].regDest = readPip[EX_MEM].regDest;
+		setFlag(true, RESUME_BIT_POS);
+		
+		std::cout << "memory";
 	}
 	
 	if (readPip[EX_MEM].cs.memWrite) {
@@ -346,6 +357,7 @@ void CPU::dma() {
 void CPU::writeBack() {
 	if (readPip[MEM_WB].cs.regWrite) {
 		regs[readPip[MEM_WB].regDest] = readPip[MEM_WB].result;
+		std::cout << "writeback";
 	}
 }
 
@@ -366,6 +378,7 @@ void CPU::sta() {
 }
 
 void CPU::add() {
+	std::cout << "add";
 	int16_t opB = readPip[ID_EX].opB;
 	int16_t opC = readPip[ID_EX].opC;
 	

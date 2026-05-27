@@ -87,5 +87,6 @@
 	
 - Handle flags, make ex_mem.write = 0,  ensure pipeline progresses in cc5 (review notes)
 - LDA will set resume = 1, so if stall = resume = 1, the pipeline can continue
-	
-  
+
+27.6.26
+- done?
